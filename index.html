@@ -1,0 +1,135 @@
+<!DOCTYPE html><html lang="ja"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>全商 情報処理2級 用語クイズ（毎回ランダム・最小JS）</title>
+<style>
+body{font-family:-apple-system,BlinkMacSystemFont,"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic","Meiryo",sans-serif;margin:0;background:#f7f7f8;color:#111}
+header{background:#111;color:#fff;padding:14px 18px;position:sticky;top:0;z-index:100}
+h1{font-size:18px;margin:0}
+.wrap{max-width:980px;margin:0 auto;padding:18px}
+.panel{background:#fff;border-radius:12px;box-shadow:0 6px 20px rgba(0,0,0,.06);padding:18px;margin-bottom:18px}
+.stat{background:#f1f3f9;border-radius:10px;padding:8px 10px;font-size:13px;display:inline-block;margin-right:8px}
+button,select{font-size:16px;padding:10px 12px;border-radius:10px;border:1px solid #ddd;background:#fff}
+button{background:#3a6df0;color:#fff;border:none;cursor:pointer}
+button:disabled{opacity:.6;cursor:not-allowed}
+.q{border:1px solid #eee;border-radius:12px;padding:14px;margin:14px 0;background:#fff}
+.stem{font-size:17px;line-height:1.6;margin-bottom:10px}
+.choices{display:grid;gap:10px}
+.choice{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid #e6e6e6;border-radius:10px;background:#fafafa}
+.choice.correct{border-color:#3fb950;background:#e9f7ec}
+.choice.wrong{border-color:#ff6a69;background:#feeeef}
+.small{font-size:12px;color:#555}
+.debug{background:#eef5ff;border:1px solid #bdd2ff;color:#0b3d91;padding:6px 8px;border-radius:8px;font-size:12px;margin-bottom:12px;display:none;white-space:pre-wrap}
+.warn{background:#fff4ce;border:1px solid #ffd24d;color:#6b4e00;padding:6px 8px;border-radius:8px;font-size:12px;margin-top:8px;display:none}
+</style>
+</head><body>
+<header><h1>全商 情報処理2級 用語クイズ（毎回ランダム・最小JS）</h1></header>
+<div class="wrap">
+  <div class="panel">
+    <div id="debug" class="debug"></div>
+    <div class="stat">進行：<span id="progress">0/0</span></div>
+    <div class="stat">正答：<span id="correct">0</span></div>
+    <div class="stat">正答率：<span id="rate">0%</span></div>
+    <select id="cat"><option value="ALL">（すべてからランダム）</option>
+      <option>ハードウェア・ソフトウェア</option>
+      <option>ディレクトリとファイル</option>
+      <option>通信ネットワーク（構成）</option>
+      <option>ネットワークの活用</option>
+      <option>情報モラルとセキュリティ</option>
+      <option>プログラミング関連知識</option>
+    </select>
+    <button id="restart" onclick="startQuiz()">出題し直す</button>
+    <div class="small" style="display:block;margin-top:8px;text-align:center;">数字キー1–5で選択／Enterで判定／Nで次へ</div>
+    <div id="warn" class="warn">このカテゴリの語彙数が少ないため、誤選択肢は全体から補完しています。</div>
+  </div>
+  <div id="host"></div>
+</div>
+
+<script>
+var DATA = [{"t": "OCR", "c": "ハードウェア・ソフトウェア", "d": "印刷物や手書き文字を光学的に読み取り、文字データに変換する装置。"}, {"t": "OMR", "c": "ハードウェア・ソフトウェア", "d": "マークシートの塗りつぶし位置を読み取る装置。"}, {"t": "磁気ディスク装置", "c": "ハードウェア・ソフトウェア", "d": "表面の磁性体にデータを記録する補助記憶装置（ハードディスク）。"}, {"t": "磁気ヘッド", "c": "ハードウェア・ソフトウェア", "d": "磁気ディスク上のデータの読み書きを行う部分。"}, {"t": "アクセスアーム", "c": "ハードウェア・ソフトウェア", "d": "磁気ヘッドを目的のトラックへ移動させる機構。"}, {"t": "シリンダ", "c": "ハードウェア・ソフトウェア", "d": "同心円状の複数トラックを束ねた論理的な記録単位。"}, {"t": "トラック", "c": "ハードウェア・ソフトウェア", "d": "磁気ディスク上の同心円1周分の記録領域。"}, {"t": "セクタ", "c": "ハードウェア・ソフトウェア", "d": "磁気ディスクでの読み書きの最小単位。"}, {"t": "SSD", "c": "ハードウェア・ソフトウェア", "d": "フラッシュメモリを用いる半導体ストレージ。機械的駆動部がない。"}, {"t": "UPS", "c": "ハードウェア・ソフトウェア", "d": "停電時に一定時間電力を供給する無停電電源装置。"}, {"t": "dpi", "c": "ハードウェア・ソフトウェア", "d": "1インチあたりのドット密度。主にプリンタやスキャナで用いる。"}, {"t": "ppi", "c": "ハードウェア・ソフトウェア", "d": "1インチあたりのピクセル密度。ディスプレイや画像で用いる。"}, {"t": "RGB", "c": "ハードウェア・ソフトウェア", "d": "光の三原色（赤・緑・青）で色を表す方式。"}, {"t": "CMYK", "c": "ハードウェア・ソフトウェア", "d": "シアン・マゼンタ・イエロー・黒で表す印刷向けの色表現。"}, {"t": "圧縮", "c": "ハードウェア・ソフトウェア", "d": "内容を保ったままデータ容量を小さくする処理。"}, {"t": "解凍", "c": "ハードウェア・ソフトウェア", "d": "圧縮データを元の状態に戻す処理。"}, {"t": "プラグアンドプレイ", "c": "ハードウェア・ソフトウェア", "d": "周辺機器を接続するとOSが自動的に設定する機能。"}, {"t": "デバイスドライバ", "c": "ハードウェア・ソフトウェア", "d": "OSと周辺機器の橋渡しをする制御用ソフトウェア。"}, {"t": "ユーティリティ", "c": "ハードウェア・ソフトウェア", "d": "OSの補助や保守・管理を行う支援ソフトウェア。"}, {"t": "アプリケーションソフト", "c": "ハードウェア・ソフトウェア", "d": "特定の作業を行うためのソフトウェア。表計算やワープロなど。"}, {"t": "ディレクトリ", "c": "ディレクトリとファイル", "d": "ファイルを分類・整理する保管場所（フォルダ）。"}, {"t": "ルートディレクトリ", "c": "ディレクトリとファイル", "d": "階層構造の最上位にあるディレクトリ。"}, {"t": "サブディレクトリ", "c": "ディレクトリとファイル", "d": "ルートより下位のすべてのディレクトリ。"}, {"t": "パス", "c": "ディレクトリとファイル", "d": "ファイルやフォルダの場所を表す表記。"}, {"t": "拡張子", "c": "ディレクトリとファイル", "d": "ファイルの種類を識別するための末尾の文字列。"}, {"t": "テキストファイル", "c": "ディレクトリとファイル", "d": "文字コードのみで構成される文書ファイル。"}, {"t": "バイナリファイル", "c": "ディレクトリとファイル", "d": "実行形式や画像・音声など、文字として読めない形式のファイル。"}, {"t": "読み取り専用", "c": "ディレクトリとファイル", "d": "参照のみ許可され、編集や保存ができない属性。"}, {"t": "隠しファイル", "c": "ディレクトリとファイル", "d": "通常の一覧表示に出ない属性を持つファイル。"}, {"t": "BMP", "c": "ディレクトリとファイル", "d": "非圧縮の静止画像形式。"}, {"t": "JPEG", "c": "ディレクトリとファイル", "d": "写真向けの高圧縮静止画像形式。"}, {"t": "GIF", "c": "ディレクトリとファイル", "d": "256色までの画像形式。簡易アニメーション対応。"}, {"t": "PNG", "c": "ディレクトリとファイル", "d": "劣化なし圧縮の画像形式。透過に対応。"}, {"t": "MPEG", "c": "ディレクトリとファイル", "d": "動画・音声の圧縮国際規格。"}, {"t": "MP3", "c": "ディレクトリとファイル", "d": "高圧縮・高音質の音声圧縮方式。"}, {"t": "MIDI", "c": "ディレクトリとファイル", "d": "演奏情報を記録する電子楽器制御用規格。"}, {"t": "CSV", "c": "ディレクトリとファイル", "d": "データをカンマ区切りで並べたテキスト形式。"}, {"t": "PDF", "c": "ディレクトリとファイル", "d": "環境に依存せず閲覧・印刷できる電子文書形式。"}, {"t": "ZIP", "c": "ディレクトリとファイル", "d": "広く使われる圧縮形式。フォルダごと圧縮も可能。"}, {"t": "LAN", "c": "通信ネットワーク（構成）", "d": "限定範囲内で機器を接続する小規模ネットワーク。"}, {"t": "WAN", "c": "通信ネットワーク（構成）", "d": "広域を結ぶ大規模ネットワーク。"}, {"t": "有線LAN", "c": "通信ネットワーク（構成）", "d": "ケーブルで接続するLAN。安定通信。"}, {"t": "無線LAN", "c": "通信ネットワーク（構成）", "d": "無線通信でデータをやり取りするLAN。"}, {"t": "Wi‑Fi", "c": "通信ネットワーク（構成）", "d": "無線LANの相互接続を保証する認証名称。"}, {"t": "SSID", "c": "通信ネットワーク（構成）", "d": "無線LANアクセスポイントの識別子。"}, {"t": "MACアドレス", "c": "通信ネットワーク（構成）", "d": "ネットワーク機器に割り当てられた物理アドレス。"}, {"t": "IPアドレス", "c": "通信ネットワーク（構成）", "d": "ネットワーク上で端末を識別する論理アドレス。"}, {"t": "サブネットマスク", "c": "通信ネットワーク（構成）", "d": "IPアドレスからネットワーク部を取り出す値。"}, {"t": "デフォルトゲートウェイ", "c": "通信ネットワーク（構成）", "d": "他ネットワークへ転送する経路の出入口。"}, {"t": "ルータ", "c": "通信ネットワーク（構成）", "d": "IPでの転送・経路選択を行う装置。"}, {"t": "スイッチングハブ", "c": "通信ネットワーク（構成）", "d": "MACアドレスに基づきフレームを宛先へ転送する装置。"}, {"t": "DNS", "c": "通信ネットワーク（構成）", "d": "ドメイン名とIPアドレスの相互変換を行う仕組み。"}, {"t": "TCP/IP", "c": "通信ネットワーク（構成）", "d": "インターネットで標準的に使われるプロトコル群。"}, {"t": "ポート番号", "c": "通信ネットワーク（構成）", "d": "同一端末内のアプリケーションを識別する番号。"}, {"t": "テザリング", "c": "ネットワークの活用", "d": "スマホ等をアクセスポイントにして他機器をネット接続する。"}, {"t": "VPN", "c": "ネットワークの活用", "d": "インターネット上に仮想専用線を構築して安全に接続する方式。"}, {"t": "ストリーミング", "c": "ネットワークの活用", "d": "受信しながら順次再生する配信方式。"}, {"t": "VoIP", "c": "ネットワークの活用", "d": "IPネットワーク上で音声通話を行う技術。"}, {"t": "Webメール", "c": "ネットワークの活用", "d": "ブラウザでメールの送受信や管理を行う方式。"}, {"t": "Cookie", "c": "ネットワークの活用", "d": "Webサイトが端末に保存する小さなデータ。"}, {"t": "MIME", "c": "ネットワークの活用", "d": "電子メールで多様なデータ形式を扱う規格。"}, {"t": "クラウドコンピューティング", "c": "ネットワークの活用", "d": "ネット経由で計算資源やアプリを提供・利用する形態。"}, {"t": "知的財産権", "c": "情報モラルとセキュリティ", "d": "創作の成果を保護し一定期間の独占権を与える権利。"}, {"t": "産業財産権", "c": "情報モラルとセキュリティ", "d": "特許・実用新案・意匠・商標の総称。"}, {"t": "著作権", "c": "情報モラルとセキュリティ", "d": "創作物の人格的・財産的利益を保護する権利。"}, {"t": "肖像権", "c": "情報モラルとセキュリティ", "d": "自己の姿を無断利用させない権利。"}, {"t": "個人情報保護法", "c": "情報モラルとセキュリティ", "d": "個人情報の安全管理等を事業者に義務付ける法律。"}, {"t": "不正アクセス禁止法", "c": "情報モラルとセキュリティ", "d": "他人のID・パスワードなどでの無断アクセスを禁止する法律。"}, {"t": "ファイアウォール", "c": "情報モラルとセキュリティ", "d": "外部からの不正侵入を遮断する仕組み。"}, {"t": "セキュリティホール", "c": "情報モラルとセキュリティ", "d": "設計ミス等による安全機能上の欠陥。"}, {"t": "ワンタイムパスワード", "c": "情報モラルとセキュリティ", "d": "一度のみ有効な短時間のパスワード。"}, {"t": "多要素認証", "c": "情報モラルとセキュリティ", "d": "知識・所持・生体など複数要素を組み合わせる認証方式。"}, {"t": "シングルサインオン", "c": "情報モラルとセキュリティ", "d": "一度の認証で複数のサービスにログインできる仕組み。"}, {"t": "暗号化", "c": "情報モラルとセキュリティ", "d": "第三者に読めない形に変換する処理。"}, {"t": "復号", "c": "情報モラルとセキュリティ", "d": "暗号化されたデータを元に戻す処理。"}, {"t": "バックアップ", "c": "情報モラルとセキュリティ", "d": "データ消失に備えて複製を別媒体に保存すること。"}, {"t": "プログラム言語", "c": "プログラミング関連知識", "d": "コンピュータへ命令を与えるための形式言語。"}, {"t": "機械語", "c": "プログラミング関連知識", "d": "0と1で表されコンピュータが直接理解できる言語。"}, {"t": "アセンブリ言語", "c": "プログラミング関連知識", "d": "機械語命令と1対1に対応する低級言語。"}, {"t": "高級言語", "c": "プログラミング関連知識", "d": "人間が理解しやすい記述で抽象度が高い言語。"}, {"t": "コンパイル", "c": "プログラミング関連知識", "d": "高級言語を機械語へ一括翻訳する処理。"}, {"t": "コンパイラ", "c": "プログラミング関連知識", "d": "原始プログラムを一括して機械語へ翻訳する処理系。"}, {"t": "インタプリタ", "c": "プログラミング関連知識", "d": "命令を1文ずつ翻訳しながら実行する処理系。"}, {"t": "リンク編集", "c": "プログラミング関連知識", "d": "複数のオブジェクトを結合して実行形式を作る工程。"}, {"t": "デバッグ", "c": "プログラミング関連知識", "d": "誤りを見つけて修正する作業。"}, {"t": "文法エラー", "c": "プログラミング関連知識", "d": "翻訳時に検出される記述の誤り。"}, {"t": "論理エラー", "c": "プログラミング関連知識", "d": "仕様や設計の誤りにより正しく動作しない問題。"}, {"t": "変数", "c": "プログラミング関連知識", "d": "値を格納するための領域。実行中に値が変わる。"}, {"t": "定数", "c": "プログラミング関連知識", "d": "実行中に値が変化しない値。"}, {"t": "配列", "c": "プログラミング関連知識", "d": "同種のデータを連続領域に並べて扱う構造。"}, {"t": "レコード", "c": "プログラミング関連知識", "d": "異なる項目をひとまとめにしたデータ構造。"}, {"t": "グローバル変数", "c": "プログラミング関連知識", "d": "プログラム全体から参照・更新できる変数。"}, {"t": "ローカル変数", "c": "プログラミング関連知識", "d": "宣言された一部分でのみ有効な変数。"}, {"t": "順次実行", "c": "プログラミング関連知識", "d": "上から順に命令を実行していく制御構造。"}, {"t": "分岐", "c": "プログラミング関連知識", "d": "条件によって処理の流れを切り替える制御構造。"}, {"t": "繰り返し", "c": "プログラミング関連知識", "d": "同じ処理を一定回数または条件成立まで反復する。"}, {"t": "フローチャート", "c": "プログラミング関連知識", "d": "処理の流れを図形記号で表した図。"}, {"t": "テストデータ", "c": "プログラミング関連知識", "d": "プログラムの検証に用いる入力データ。"}, {"t": "テストラン", "c": "プログラミング関連知識", "d": "テストデータで実行して正しさを確認する作業。"}];
+
+// ===== ここから最小JSロジック（ES5のみ） =====
+var host=document.getElementById('host'),catSel=document.getElementById('cat');
+var progress=document.getElementById('progress'),correctEl=document.getElementById('correct'),rateEl=document.getElementById('rate');
+var warn=document.getElementById('warn');
+var correctCount=0, currentIndex=-1, order=[], pool=[], currentQ=null, currentChoices=[], selectedIdx=-1, answered=false;
+
+function shuffle(a){ for(var i=a.length-1;i>0;i--){ var j=Math.floor(Math.random()*(i+1)); var t=a[i]; a[i]=a[j]; a[j]=t; } return a; }
+function byCat(cat){ if(cat==='ALL') return DATA.slice(0); var out=[],i; for(i=0;i<DATA.length;i++) if(DATA[i].c===cat) out.push(DATA[i]); return out; }
+function pickDistractors(q,src,k){ var o=[],i; for(i=0;i<src.length;i++){ if(src[i].t!==q.t) o.push(src[i]); } shuffle(o); var r=[]; for(i=0;i<k && i<o.length;i++) r.push(o[i]); return r; }
+function updateStats(){ var total=order.length; var solved=Math.min(currentIndex+1,total); progress.textContent=solved+"/"+total; correctEl.textContent=""+correctCount; var base=(solved>0?solved:1); var rate= total? Math.round((correctCount/base)*100):0; rateEl.textContent=(isNaN(rate)?0:rate)+"%"; }
+
+function renderQuestion(){
+  var qIdx=order[currentIndex]; currentQ=pool[qIdx];
+  var same=byCat(currentQ.c); var src=(same.length>=5? same: DATA);
+  warn.style.display = (same.length>=5? 'none':'block');
+  var distract=pickDistractors(currentQ,src,4); currentChoices=shuffle([currentQ].concat(distract)).slice(0,5);
+  // DOM
+  host.innerHTML='';
+  var wrap=document.createElement('div'); wrap.className='q';
+  var stem=document.createElement('div'); stem.className='stem';
+  stem.textContent="Q"+(currentIndex+1)+". 次の説明に当てはまる用語はどれですか？\\n「"+currentQ.d+"」";
+  wrap.appendChild(stem);
+  var list=document.createElement('div'); list.className='choices';
+  for(var i=0;i<currentChoices.length;i++){
+    (function(i){
+      var ch=currentChoices[i]; var lab=document.createElement('label'); lab.className='choice';
+      lab.innerHTML='<input type="radio" name="ans"><div><strong>'+(i+1)+'. '+ch.t+'</strong><br><span class="small">'+ch.c+'</span></div>';
+      lab.onclick=function(){ selectedIdx=i; submitBtn.disabled=false; lab.querySelector('input').checked=true; };
+      list.appendChild(lab);
+    })(i);
+  }
+  wrap.appendChild(list);
+  var btnRow=document.createElement('div'); btnRow.style.marginTop='10px';
+  var submitBtn=document.createElement('button'); submitBtn.textContent='回答する'; submitBtn.disabled=true;
+  submitBtn.onclick=function(){
+    if(answered||selectedIdx<0) return; answered=true;
+    var ok=(currentChoices[selectedIdx].t===currentQ.t); if(ok) correctCount++;
+    // 色付け＆解説
+    var correctIdx=-1,j; for(j=0;j<currentChoices.length;j++){ if(currentChoices[j].t===currentQ.t){ correctIdx=j; break; } }
+    var labs=list.querySelectorAll('.choice');
+    for(j=0;j<labs.length;j++){
+      if(j===correctIdx) labs[j].className='choice correct';
+      if(j===selectedIdx && j!==correctIdx) labs[j].className='choice wrong';
+    }
+    var exp=document.createElement('div'); exp.className='small'; exp.style.marginTop='10px'; exp.style.borderTop='1px dashed #ddd'; exp.style.paddingTop='10px';
+    var html='<strong>'+(ok?'正解！':'不正解')+'</strong> — 正解「'+currentQ.t+'」の定義：'+currentQ.d;
+    html+='<div class="small" style="margin-top:8px">各選択肢の意味：</div>';
+    for(j=0;j<currentChoices.length;j++){ html+='<div class="small"><strong>'+(j+1)+'. '+currentChoices[j].t+'</strong> — '+currentChoices[j].d+'</div>'; }
+    exp.innerHTML=html; wrap.appendChild(exp); nextBtn.disabled=false; updateStats();
+  };
+  btnRow.appendChild(submitBtn);
+  var nextBtn=document.createElement('button'); nextBtn.textContent='次の問題'; nextBtn.style.marginLeft='8px'; nextBtn.disabled=true;
+  nextBtn.onclick=function(){ if(currentIndex+1>=order.length){ // 終了
+      host.innerHTML=''; var done=document.createElement('div'); done.className='q';
+      done.textContent='全'+order.length+'問が終了。正答 '+correctCount+'（'+Math.round(correctCount/order.length*100)+'%）'; host.appendChild(done);
+    }else{ currentIndex++; answered=false; selectedIdx=-1; renderQuestion(); }
+    updateStats();
+  };
+  btnRow.appendChild(nextBtn); wrap.appendChild(btnRow);
+  host.appendChild(wrap);
+  updateStats();
+}
+
+function startQuiz(){
+  correctCount=0; currentIndex=0; answered=false; selectedIdx=-1;
+  var cat=catSel.value; var all=byCat(cat); if(all.length<5) all=DATA.slice(0);
+  Math.random(); Math.random();
+  pool=all.slice(0);
+  shuffle(pool);
+  var n=Math.min(30,pool.length); order=[]; for(var i=0;i<n;i++) order.push(i);
+  renderQuestion();
+}
+
+// 初期起動時に自動開始
+startQuiz();
+
+// キーボード操作（外付けキーボード向け）
+document.addEventListener('keydown',function(e){
+  var k=e.key||e.keyCode;
+  var labels=host.querySelectorAll('.choice');
+  if(k>='1'&&k<='5'){ var i=parseInt(k,10)-1; if(labels[i]) labels[i].click(); }
+  else if(k==='Enter'||k===13){ var btns=host.getElementsByTagName('button'); if(btns[0]&&!btns[0].disabled) btns[0].click(); }
+  else if((k+'').toLowerCase()==='n'){ var btns=host.getElementsByTagName('button'); if(btns[1]&&!btns[1].disabled) btns[1].click(); }
+},false);
+</script>
+</body></html>
