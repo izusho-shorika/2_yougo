@@ -66,8 +66,9 @@ function renderQuestion(){
   // DOM
   host.innerHTML='';
   var wrap=document.createElement('div'); wrap.className='q';
-  var stem=document.createElement('div'); stem.className='stem';
-  stem.textContent="Q"+(currentIndex+1)+". 次の説明に当てはまる用語はどれですか？\\n「"+currentQ.d+"」";
+  var stem = document.createElement('div');
+  stem.className = 'stem';
+  stem.innerHTML = "Q" + (currentIndex + 1) + ". 次の説明に当てはまる用語はどれですか？<br>「" + currentQ.d + "」";
   wrap.appendChild(stem);
   var list=document.createElement('div'); list.className='choices';
   for(var i=0;i<currentChoices.length;i++){
